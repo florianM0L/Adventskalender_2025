@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Szene 3_1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: system-ui, sans-serif;
+      background: black;
+    }
+
+    /* Hintergrundbild 3_1 */
+    #bg {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: 1;
+    }
+
+    /* Textbox oben links */
+    #textBox {
+      position: absolute;
+      left: 16px;
+      top: 16px;
+      padding: 12px 16px;
+      background: rgba(0,0,0,0.65);
+      color: white;
+      border-radius: 8px;
+      max-width: 33vw;
+
+      /* 50% kleiner */
+      font-size: clamp(25px, 1.2vw, 30px);
+
+      line-height: 1.4;
+      display: none;
+      z-index: 10;
+    }
+
+    /* Weiter-Button */
+    #weiterBtn {
+      margin-top: 12px;
+      background: #ffd54a;
+      border: none;
+      padding: 12px 18px;
+
+      /* 50% kleiner */
+      font-size: clamp(20px, 1vw, 27px);
+
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Hintergrundbild -->
+  <img id="bg" src="3_1.png">
+
+  <!-- Textbox oben links -->
+  <div id="textBox">
+    <div id="textContent"></div>
+    <button id="weiterBtn">Weiter</button>
+  </div>
+
+<script>
+/* Elemente */
+const textBox     = document.getElementById("textBox");
+const textContent = document.getElementById("textContent");
+const weiterBtn   = document.getElementById("weiterBtn");
+
+let step = 0;
+
+/* Funktion: Text anzeigen */
+function showText(txt) {
+  textBox.style.display = "block";
+  textContent.innerHTML = txt;
+}
+
+/* Start: erster Text */
+showText("Ah... es war nur ein Traum...");
+step = 1;
+
+/* Weiter-Button Logik */
+weiterBtn.onclick = () => {
+
+  if (step === 1) {
+    showText("Ich muss erstmal wach werden...<br>Mal sehen wie das Wetter heute wird...");
+    step = 2;
+    return;
+  }
+
+  /* Übergang auf Szene 3_2 */
+  if (step === 2) {
+    window.location.href = "3_2.html";
+    return;
+  }
+
+};
+</script>
+
+</body>
+</html>

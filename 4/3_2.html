@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Szene 3_2 – Slides von oben</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background: white;
+      font-family: system-ui, sans-serif;
+    }
+
+    /* Handybild oben */
+    #phoneFrame {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    /* Bereich für die Slides */
+    #slideArea {
+      position: fixed;
+      width: 45vw;
+      height: 70vh;
+      left: 50%;
+      top: 42%;
+      transform: translate(-50%, -50%);
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    /* Normale Slides (50% kleiner als vorher) */
+    .slide {
+      position: absolute;
+      width: 100%;
+      top: -120%;
+      left: 0;
+
+      text-align: center;
+
+      /* WAR: clamp(39px, 2.6vw, 58px) */
+      font-size: clamp(19px, 1.3vw, 29px);
+      font-weight: bold;
+
+      line-height: 1.3;
+      color: black;
+
+      transition: top 0.7s ease-out;
+    }
+
+    .slide img {
+      width: 30%;
+      height: auto;
+    }
+
+    /* GROSSE Titel-Slides (keine Änderung!) */
+    .bigTitle {
+      font-size: clamp(54px, 3.6vw, 79px);
+      font-weight: bold;
+    }
+
+    /* Mittelpunkt 20% höher */
+    .centerPosition {
+      top: 30%;
+      transform: translateY(-30%);
+    }
+
+    /* Slide nach unten raus */
+    .leaveDown {
+      top: 120%;
+    }
+
+    /* Wetter – Bild links, Text rechts */
+    .sideBySide {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2vw;
+      text-align: left;
+    }
+
+    /* Textbox oben links (50% kleiner gemacht) */
+    #textBox {
+      position: absolute;
+      left: 16px;
+      top: 16px;
+      padding: 12px 16px;
+      background: rgba(0,0,0,0.65);
+      color: white;
+      border-radius: 8px;
+      max-width: 33vw;
+
+      /* WAR: clamp(50px, 2.4vw, 60px) */
+      font-size: clamp(25px, 1.2vw, 30px);
+
+      line-height: 1.4;
+      display: none;
+      z-index: 200;
+    }
+
+    /* Weiter-Button (50% kleiner) */
+    #weiterBtn {
+      margin-top: 12px;
+      background: #ffd54a;
+      border: none;
+      padding: 12px 18px;
+
+      /* WAR: clamp(40px, 2vw, 55px) */
+      font-size: clamp(20px, 1vw, 27px);
+
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- DISPLAY SLIDES -->
+  <div id="slideArea">
+
+    <!-- TITEL 1: WETTER -->
+    <div id="s1" class="slide bigTitle">
+      Wetter
+    </div>
+
+    <!-- Wetterinfo: Bild links, Text rechts -->
+    <div id="s2" class="slide">
+      <div class="sideBySide">
+        <img src="3_2_1.png">
+        <div>
+          Achtung! Trockene Luft!<br>Bleib lieber im Glas!
+        </div>
+      </div>
+    </div>
+
+    <!-- TITEL 2: Events -->
+    <div id="s3" class="slide bigTitle">
+      Events
+    </div>
+
+    <!-- Eventtext -->
+    <div id="s4" class="slide">
+      Sie wollen Ihren liebsten beeindrucken?<br>
+      Lernen Sie jetzt Ihre persönlichen Schneekreise zu malen<br>
+      und verzaubern Sie Ihren Schwarm… ❤️
+    </div>
+
+    <!-- TITEL 3: Keine weiteren Neuigkeiten -->
+    <div id="s5" class="slide bigTitle">
+      Keine weiteren Neuigkeiten.
+    </div>
+
+  </div>
+
+  <!-- Handybild -->
+  <img id="phoneFrame" src="3_2.png">
+
+  <!-- (nicht genutzt, aber gelassen) -->
+  <div id="textBox">
+    <div id="textContent"></div>
+    <button id="weiterBtn">Weiter</button>
+  </div>
+
+
+<script>
+let step = 1;
+let currentSlide = 0;
+
+/* Slide reinfahren */
+function slideIn(n) {
+  document.getElementById("s" + n).classList.add("centerPosition");
+}
+
+/* Slide rausfahren */
+function slideOut(n) {
+  const el = document.getElementById("s" + n);
+  el.classList.remove("centerPosition");
+  el.classList.add("leaveDown");
+}
+
+/* Klicksteuerung */
+document.body.addEventListener("click", () => {
+
+  /* Step 1–5: Normaler Slidewechsel */
+  if (step >= 1 && step <= 5) {
+
+    if (step === 1) {
+      currentSlide = 1;
+      slideIn(1);
+      step = 2;
+      return;
+    }
+
+    if (step >= 2 && step <= 5) {
+      slideOut(currentSlide);
+      currentSlide++;
+      slideIn(currentSlide);
+      step++;
+      return;
+    }
+  }
+
+  /* Nach letztem Slide → weiter zu Szene 3_3 */
+  if (step === 6) {
+    window.location.href = "3_3.html";
+    return;
+  }
+
+});
+
+/* Setze Step 6 nach dem letzten Slide */
+document.getElementById("s5").addEventListener("transitionend", () => {
+  if (currentSlide === 5) {
+    step = 6;
+  }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Szene 3_3</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: black;
+        font-family: system-ui, sans-serif;
+    }
+
+    /* Hintergrundbild exakt in Wrapper */
+    #bgWrapper {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1;
+    }
+
+    #bg {
+        width: 100vw;
+        height: 100vh;
+        object-fit: contain;
+        background: black;
+    }
+
+    /* Textbox */
+    #textBox {
+        position: absolute;
+        left: 16px;
+        top: 16px;
+        background: rgba(0,0,0,0.65);
+        color: white;
+        padding: 12px 16px;
+        border-radius: 10px;
+        max-width: 40vw;
+
+        font-size: clamp(25px, 1.2vw, 30px);
+        line-height: 1.4;
+
+        display: none;
+        z-index: 20;
+    }
+
+    #weiterBtn {
+        margin-top: 16px;
+        background: #ffd54a;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: clamp(20px, 1vw, 27px);
+    }
+
+
+    /* Hotspot für Partikel */
+    .hotspot {
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        transform: translate(-50%, -50%);
+        display: none;
+        z-index: 30;
+    }
+
+    .particle {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: gold;
+        border-radius: 50%;
+        opacity: 0.8;
+        animation: floatUp 1.2s linear infinite;
+    }
+
+    @keyframes floatUp {
+        0%   { transform: translateY(0) scale(1); opacity: 0.9; }
+        100% { transform: translateY(-40px) scale(0.4); opacity: 0; }
+    }
+</style>
+</head>
+<body>
+
+<div id="bgWrapper">
+    <img id="bg" src="3_1.png">
+</div>
+
+<div id="textBox">
+    <div id="textContent"></div>
+    <button id="weiterBtn">Weiter</button>
+</div>
+
+<!-- Hotspots (Beispielwerte!) -->
+<div id="hs_glass" class="hotspot" style="left: 38%; top: 70%;"></div>
+<div id="hs_hat"   class="hotspot" style="left: 50%; top: 90%;"></div>
+<div id="hs_door"  class="hotspot" style="left: 68%; top: 38%;"></div>
+
+<script>
+const bg = document.getElementById("bg");
+const textBox = document.getElementById("textBox");
+const textContent = document.getElementById("textContent");
+const weiterBtn = document.getElementById("weiterBtn");
+
+const hs_glass = document.getElementById("hs_glass");
+const hs_hat   = document.getElementById("hs_hat");
+const hs_door  = document.getElementById("hs_door");
+
+let step = 0;
+let int1, int2, int3;
+
+function spawnParticles(zone, store) {
+    let int = setInterval(() => {
+        const p = document.createElement("div");
+        p.classList.add("particle");
+
+        p.style.left = (Math.random() * 180) + "px";
+        p.style.top  = (Math.random() * 180) + "px";
+        p.style.animationDuration = (0.7 + Math.random()*0.8) + "s";
+
+        zone.appendChild(p);
+        setTimeout(() => p.remove(), 1500);
+    }, 120);
+    return int;
+}
+
+/* Starttext */
+setTimeout(() => {
+    textBox.style.display = "block";
+    textContent.innerHTML = "Meh weiß ich nicht ob ich das Event heute fühle.";
+    step = 1;
+}, 1000);
+
+/* Weiter → Glas */
+weiterBtn.onclick = () => {
+    if (step === 1) {
+        weiterBtn.style.display = "none";
+        textContent.innerHTML =
+            "Naja, wollen wir erstmal aufstehen...<br>Was brauche ich denn alles?";
+
+        hs_glass.style.display = "block";
+        int1 = spawnParticles(hs_glass);
+
+        hs_glass.onclick = () => {
+            clearInterval(int1);
+            hs_glass.style.display = "none";
+
+            bg.src = "3_1_1.png";
+
+            hs_hat.style.display = "block";
+            int2 = spawnParticles(hs_hat);
+
+            hs_hat.onclick = () => {
+                clearInterval(int2);
+                hs_hat.style.display = "none";
+
+                bg.src = "3_1_2.png";
+
+                textBox.style.display = "block";
+                weiterBtn.style.display = "none";
+                textContent.innerHTML = "Ok ich sollte alles haben. Zeit für Frühstück...";
+
+                hs_door.style.display = "block";
+                int3 = spawnParticles(hs_door);
+
+                hs_door.onclick = () => {
+                    clearInterval(int3);
+                    hs_door.style.display = "none";
+
+                    bg.src = "3_1_3.png";
+                    textBox.style.display = "block";
+                    textContent.innerHTML = "Fortsetzung folgt...";
+                };
+            };
+        };
+    }
+};
+</script>
+
+</body>
+</html>
