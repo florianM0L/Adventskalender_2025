@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Szene 1_3</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: system-ui, sans-serif;
+    }
+
+    /* Hintergrundbild */
+    #bg {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Textbox rechts oben */
+    #textBox {
+      position: absolute;
+      right: 16px;
+      top: 16px;
+      padding: 12px 14px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border-radius: 8px;
+      max-width: 33vw;
+      font-size: clamp(30px, 2.4vw, 38px);
+      line-height: 1.4;
+      text-align: left;
+    }
+
+    #weiterBtn {
+      margin-top: 10px;
+      background: #ffd54a;
+      border: none;
+      padding: 8px 14px;
+      font-size: clamp(14px, 2vw, 18px);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #weiterBtn:hover {
+      filter: brightness(1.1);
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <img id="bg" src="1_3.png" alt="Szene 1_3">
+
+  <!-- Textbox rechts oben -->
+  <div id="textBox">
+    <div id="textContent">
+      Na Toll, was für ein Traum... aber immerhin gabs was zu futtern...
+    </div>
+    <button id="weiterBtn">Weiter</button>
+  </div>
+
+<script>
+  const textContent = document.getElementById("textContent");
+  const weiterBtn = document.getElementById("weiterBtn");
+  let state = 0;
+
+  weiterBtn.addEventListener("click", () => {
+    if (state === 0) {
+      textContent.innerHTML = "<b>Fortsetzung folgt</b>";
+      weiterBtn.style.display = "none";
+      state = 1;
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Pull-Szene</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: system-ui, sans-serif;
+    }
+
+    #bg {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      display: block;
+    }
+
+    #textBox {
+      position: absolute;
+      left: 16px;
+      top: 16px;
+      padding: 12px 14px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border-radius: 8px;
+      max-width: 33vw;
+      font-size: clamp(30px, 2.4vw, 38px);
+      line-height: 1.4;
+      display: none;
+    }
+
+    #weiterBtn {
+      margin-top: 10px;
+      background: #ffd54a;
+      border: none;
+      padding: 8px 14px;
+      font-size: clamp(14px, 2vw, 18px);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #flash {
+      position: absolute;
+      top: 35%;
+      left: 50%;
+      width: min(12vw, 22vh);
+      height: min(12vw, 22vh);
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(circle,
+        rgba(255,255,200,0.95) 0%,
+        rgba(255,240,120,0.8) 40%,
+        rgba(255,220,0,0.3) 70%,
+        rgba(255,220,0,0.0) 100%
+      );
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @keyframes glowFlash {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+      25% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.6); }
+    }
+
+    #flash.show {
+      animation: glowFlash 0.6s ease-out forwards;
+    }
+
+    .overlayImg {
+      position: absolute;
+      top: 35%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(12vw, 22vh);
+      height: auto;
+      pointer-events: none;
+    }
+
+    /* ✨✨ SPARKLE EFFEKTE ✨✨ */
+.sparkle {
+  position: absolute;
+  background: radial-gradient(circle,
+    rgba(210, 120, 255, 1) 0%,      /* helles Lila Zentrum */
+    rgba(180, 80, 255, 0.8) 40%,    /* intensives Violett */
+    rgba(140, 0, 255, 0.4) 65%,     /* mystisches Tiefviolett */
+    rgba(120, 0, 255, 0.0) 100%     /* transparenter Rand */
+  );
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  animation: sparkleAnim 1.2s ease-out forwards;
+}
+
+
+
+@keyframes sparkleAnim {
+  0%   { opacity: 0; transform: scale(0.4); }
+  30%  { opacity: 1; transform: scale(1.4); }
+  100% { opacity: 0; transform: scale(2.4); }
+}
+
+
+    #nomContainer {
+      position: absolute;
+      top: 40%;
+      width: 100%;
+      text-align: center;
+      pointer-events: none;
+      font-size: clamp(32px, 5vw, 64px);
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 0 12px black;
+    }
+
+    .nomWord {
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .nomWord.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+
+<body>
+
+<img id="bg" src="1_1.png">
+
+<div id="textBox">
+  <div id="textContent"></div>
+  <button id="weiterBtn">Weiter</button>
+</div>
+
+<div id="flash"></div>
+
+<div id="nomContainer">
+  <span id="nom1" class="nomWord">nom</span>
+  <span id="nom2" class="nomWord">Nom</span>
+  <span id="nom3" class="nomWord">NOM</span>
+</div>
+
+<script>
+const bg = document.getElementById("bg");
+const textBox = document.getElementById("textBox");
+const textContent = document.getElementById("textContent");
+const weiterBtn = document.getElementById("weiterBtn");
+const flash = document.getElementById("flash");
+
+const nom1 = document.getElementById("nom1");
+const nom2 = document.getElementById("nom2");
+const nom3 = document.getElementById("nom3");
+
+let storyStep = 0;
+let overlayIndex = 0;
+let currentImg = null;
+let glowRunning = false;
+let allowRemove = false;
+
+const overlayBilder = [
+  "1_1_1.png",
+  "1_1_2.png",
+  "1_1_3.png",
+  "1_1_4.png",
+  "1_1_5.png",
+  "1_1_6.png"
+];
+
+function setText(txt, showBtn) {
+  textContent.innerHTML = txt;
+  textBox.style.display = "block";
+  weiterBtn.style.display = showBtn ? "inline-block" : "none";
+}
+
+/* ✨✨ Sparkles erzeugen ✨✨ */
+function createSparkles() {
+
+  const sparkleCount = 50;   // massive Anzahl
+  
+  for (let i = 0; i < sparkleCount; i++) {
+      
+    const s = document.createElement("div");
+    s.className = "sparkle";
+    
+    // Sparkle Größe deutlich größer (random 1× – 3×)
+    const size = 10 + Math.random() * 20; 
+    s.style.width = size + "px";
+    s.style.height = size + "px";
+
+    /*
+       Neuer Mega-Radius:
+       - random Radius von 0 (nah am Bild)
+       - bis 300px (weit außen)
+       - → 10× größer als original
+    */
+    const radius = Math.random() * 300;
+
+    // Zufälliger Winkel über 360°
+    const angle = Math.random() * Math.PI * 2;
+
+    // Position um das Bild herum (Mittelpunkt = 50%, 35%)
+    const offsetX = Math.cos(angle) * radius;
+    const offsetY = Math.sin(angle) * radius;
+
+    s.style.left = `calc(50% + ${offsetX}px)`;
+    s.style.top  = `calc(35% + ${offsetY}px)`;
+
+    // Zufälliges Delay (alle funkeln zeitversetzt)
+    s.style.animationDelay = (Math.random() * 0.5) + "s";
+
+    document.body.appendChild(s);
+
+    // Sparkle nach Animation entfernen
+    setTimeout(() => s.remove(), 1800);
+  }
+}
+
+
+
+
+/* Glow + Bild anzeigen */
+function showPullImage() {
+  if (glowRunning) return;
+  glowRunning = true;
+
+  flash.classList.remove("show");
+  void flash.offsetWidth;
+  flash.classList.add("show");
+
+  flash.addEventListener("animationend", function handler() {
+    flash.removeEventListener("animationend", handler);
+
+    currentImg = document.createElement("img");
+    currentImg.className = "overlayImg";
+    currentImg.src = overlayBilder[overlayIndex];
+    document.body.appendChild(currentImg);
+
+    /* ✨ Wenn letztes Bild: Sparkles anzeigen ✨ */
+    if (overlayIndex === 5) {
+      createSparkles();
+    }
+
+    allowRemove = true;
+    glowRunning = false;
+  });
+}
+
+/* NOM */
+function startNom() {
+  textBox.style.display = "none";
+
+  nom1.classList.add("visible");
+  setTimeout(() => nom2.classList.add("visible"), 1000);
+  setTimeout(() => nom3.classList.add("visible"), 2000);
+
+  setTimeout(() => {
+    window.location.href = "1_3.html";
+  }, 3000);
+}
+
+/* Weiter-Button */
+weiterBtn.addEventListener("click", e => {
+  e.stopPropagation();
+
+  if (storyStep === 1) {
+    setText("Ist das... mein Pc?!", true);
+    storyStep = 2;
+
+  } else if (storyStep === 2) {
+    bg.src = "1_2.png";
+    setText("Ach stimmt... ich war ja am pullen...", true);
+    storyStep = 3;
+
+  } else if (storyStep === 3) {
+    setText("Mal sehen ob ich endlich mal einen 5 Star bekommen...", true);
+    storyStep = 4;
+
+  } else if (storyStep === 4) {
+    storyStep = 5;
+    weiterBtn.style.display = "none";
+    showPullImage();
+  }
+
+  else if (storyStep === 7) {
+    startNom();
+    storyStep = 8;
+  }
+});
+
+/* Klick auf den Screen */
+document.body.addEventListener("click", () => {
+
+  if (storyStep === 0) {
+    setText("Wo... Wo bin ich?", true);
+    storyStep = 1;
+    return;
+  }
+
+  /* Bilder 1–5 */
+  if (storyStep === 5) {
+
+    if (allowRemove && currentImg) {
+      currentImg.remove();
+      allowRemove = false;
+      currentImg = null;
+
+      overlayIndex++;
+
+      if (overlayIndex === 5) {
+        setText("Komm schon... <b>Bitteeee...</b>", false);
+        storyStep = 6;
+        return;
+      }
+
+      showPullImage();
+      return;
+    }
+    return;
+  }
+
+  /* Letztes Popup-Bild */
+  if (storyStep === 6) {
+
+    if (allowRemove && currentImg) {
+      currentImg.remove();
+      allowRemove = false;
+      currentImg = null;
+      overlayIndex++;
+
+      setText(
+        "War ja klar... immerhin ein 4 Star Käsekuchenstück, dass lass ich mir schmecken...",
+        true
+      );
+
+      storyStep = 7;
+      return;
+    }
+
+    if (!currentImg && overlayIndex === 5) {
+      showPullImage();
+    }
+  }
+});
+</script>
+
+</body>
+</html>
