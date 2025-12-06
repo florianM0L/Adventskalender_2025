@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Szene 5 – Frühstück</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: black;
+        font-family: system-ui, sans-serif;
+    }
+
+    #bg {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        object-fit: contain;
+        background: black;
+        z-index: 1;
+    }
+
+    /* ⭐ Cookie wieder 10% höher */
+    #cookieImg {
+        position: fixed;
+        width: 6vw;
+        left: 37vw;
+        top: 13vh;
+        z-index: 15;
+        display: none;
+        pointer-events: none;
+    }
+
+    .crumb {
+        position: fixed;
+        width: 0.6vw;
+        height: 0.6vw;
+        background: rgb(180,120,60);
+        border-radius: 50%;
+        z-index: 30;
+        opacity: 1;
+        pointer-events: none;
+    }
+
+    #doorZone {
+        position: fixed;
+        width: 10vw;
+        height: 20vh;
+        left: 75vw;
+        top: 20vh;
+        z-index: 40;
+        display: none;
+        pointer-events: auto;
+    }
+
+    /* ⭐ Nikolaus-Minievent */
+    #nikol {
+        position: fixed;
+        width: 3vw;
+        left: 14vw;
+        top: 46vh;
+        transform: translate(-50%, -50%);
+        z-index: 200;
+        cursor: pointer;
+        transition: all 1s ease-out;
+    }
+
+    #nikolText {
+        position: fixed;
+        top: 65vh;
+        left: 50vw;
+        transform: translateX(-50%);
+        color: white;
+        font-size: clamp(28px, 2vw, 38px);
+        opacity: 0;
+        transition: opacity 1s ease-out;
+        z-index: 210;
+        text-shadow: 0 0 12px black;
+        display: none;
+    }
+
+    .nikolLetter {
+        font-weight: bold;
+        text-shadow: 0 0 10px black;
+    }
+
+    /* goldene funkelnde Partikel */
+    .nikolParticle {
+        position: fixed;
+        width: 0.8vw;
+        height: 0.8vw;
+        border-radius: 50%;
+        background: gold;
+        opacity: 0.9;
+        z-index: 205;
+        pointer-events: none;
+        animation: nikolUp 1.1s linear forwards;
+    }
+
+    @keyframes nikolUp {
+        0% { transform: translateY(0) scale(1); opacity: 1; }
+        100% { transform: translateY(-4vh) scale(0.3); opacity: 0; }
+    }
+
+
+    .goldParticle {
+        position: absolute;
+        width: 0.8vw;
+        height: 0.8vw;
+        background: gold;
+        border-radius: 50%;
+        opacity: 0.9;
+        pointer-events: none;
+        animation: glowUp 1.1s linear infinite;
+    }
+
+    @keyframes glowUp {
+        0% { transform: translateY(0) scale(1); opacity: 0.9; }
+        100% { transform: translateY(-2vh) scale(0.4); opacity: 0; }
+    }
+
+    #textBox {
+        position: absolute;
+        left: 16px;
+        top: 16px;
+        background: rgba(0,0,0,0.65);
+        color: white;
+        padding: 12px 16px;
+        border-radius: 8px;
+        max-width: 33vw;
+        font-size: clamp(25px, 1.2vw, 30px);
+        line-height: 1.4;
+        display: none;
+        z-index: 50;
+    }
+</style>
+</head>
+
+<body>
+
+<img id="bg" src="5_1.png">
+<img id="cookieImg" src="5_3.png">
+<img id="nikol" src="5_6.png">
+
+<div id="nikolText">Ich wünsche dir einen schönen Nikolaus</div>
+<div id="doorZone"></div>
+<div id="textBox"></div>
+
+<script>
+const bg = document.getElementById("bg");
+const textBox = document.getElementById("textBox");
+const cookieImg = document.getElementById("cookieImg");
+const doorZone = document.getElementById("doorZone");
+
+let cookieShownLeft = false;
+let cookieMovedToCenter = false;
+let eatCounter = 0;
+let doorParticleInterval = null;
+
+/* Starttext */
+setTimeout(() => {
+    textBox.style.display = "block";
+    textBox.innerHTML = "Hmm was könnte ich denn Leckeres zum Frühstück essen?";
+}, 800);
+
+function startDoorParticles() {
+    doorZone.style.display = "block";
+
+    doorParticleInterval = setInterval(() => {
+        const p = document.createElement("div");
+        p.classList.add("goldParticle");
+
+        p.style.left = Math.random() * 8 + "vw";
+        p.style.top = Math.random() * 18 + "vh";
+
+        doorZone.appendChild(p);
+        setTimeout(() => p.remove(), 1200);
+
+    }, 120);
+}
+
+function stopDoorParticles() {
+    clearInterval(doorParticleInterval);
+    doorZone.innerHTML = "";
+    doorZone.style.display = "none";
+}
+
+/* =========================================================
+   ⭐ NIKOLAUS MINI-EVENT
+========================================================= */
+
+const nikol = document.getElementById("nikol");
+const nikolText = document.getElementById("nikolText");
+
+/* Text rot-weiß einfärben */
+function colorizeNikolText(text) {
+
+    nikolText.innerHTML = ""; // leeren
+
+    for (let i = 0; i < text.length; i++) {
+        const span = document.createElement("span");
+        span.classList.add("nikolLetter");
+
+        // Abwechselnd rot / weiß
+        span.style.color = (i % 2 === 0) ? "red" : "white";
+
+        span.textContent = text[i];
+
+        nikolText.appendChild(span);
+    }
+}
+
+let nikolStage = 0; // 0 = klein sichtbar, 1 = vergrößert, 2 = kann verschwinden
+
+function spawnNikolParticles(x, y) {
+    for (let i = 0; i < 12; i++) {
+        const p = document.createElement("div");
+        p.classList.add("nikolParticle");
+
+        const dx = (Math.random() * 2 - 1) * 5;
+        const dy = (Math.random() * 2 - 1) * 3;
+
+        p.style.left = `calc(${x}vw + ${dx}vw)`;
+        p.style.top = `calc(${y}vh + ${dy}vh)`;
+
+        document.body.appendChild(p);
+
+        setTimeout(() => p.remove(), 1200);
+    }
+}
+
+/* ⭐ Klick auf 5_6 → Mitte, größer, rotiert */
+nikol.onclick = () => {
+    if (nikolStage === 0) {
+
+        nikolStage = 1;
+
+        nikol.style.left = "50vw";
+        nikol.style.top = "50vh";
+        nikol.style.width = "16vw";
+        nikol.style.transform = "translate(-50%, -50%) rotate(45deg)";
+
+        spawnNikolParticles(50, 50);
+
+        setTimeout(() => {
+           colorizeNikolText("Ich wünsche dir einen schönen Nikolaus");
+nikolText.style.display = "block";
+nikolText.style.opacity = "1";
+
+        }, 600);
+
+        return;
+    }
+
+    /* ⭐ zweiter Klick → Blur + langsames Verschwinden */
+    if (nikolStage === 1) {
+        nikolStage = 2;
+
+        nikolText.style.opacity = "0";
+
+        nikol.style.transition = "all 1.2s ease-out, filter 1.2s ease-out";
+        nikol.style.filter = "blur(12px)";
+        nikol.style.opacity = "0";
+
+        setTimeout(() => {
+            nikol.remove();
+            nikolText.remove();
+        }, 1300);
+    }
+};
+
+
+document.body.addEventListener("click", (ev) => {
+
+    const x = ev.clientX / window.innerWidth;
+    const y = ev.clientY / window.innerHeight;
+
+    const insideDoor =
+        x > 0.30 && x < 0.50 &&
+        y > 0.05 && y < 0.35;
+
+    /* 1 — Tür öffnet */
+    if (insideDoor && !cookieShownLeft) {
+
+        cookieShownLeft = true;
+        bg.src = "5_2.png";
+        cookieImg.style.display = "block";
+
+        textBox.innerHTML =
+            "Oh stimmt, ich hab ja noch Kekse da...<br>Dann gibt’s die zum Frühstück!";
+        return;
+    }
+
+    /* 2 — Cookie in die Mitte */
+    if (insideDoor && cookieShownLeft && !cookieMovedToCenter) {
+
+        cookieMovedToCenter = true;
+
+        cookieImg.style.display = "none";
+
+        cookieImg.style.left = "55%";
+        cookieImg.style.top = "66%";
+        cookieImg.style.transform = "translate(-50%, -50%)";
+
+        setTimeout(() => {
+            cookieImg.style.display = "block";
+            textBox.innerHTML = "Na dann lass ich es mir mal schmecken...";
+        }, 150);
+
+        return;
+    }
+
+    /* 3 — Cookie essen */
+    if (cookieMovedToCenter) {
+
+        const cookieX = 0.55;
+        const cookieY = 0.66;
+
+        const inCookieRange =
+            x > cookieX - 0.04 && x < cookieX + 0.04 &&
+            y > cookieY - 0.10 && y < cookieY + 0.10;
+
+        if (!inCookieRange) return;
+
+        eatCounter++;
+
+        if (eatCounter === 1) textBox.innerHTML = "Mhm lecker...";
+        if (eatCounter === 5) textBox.innerHTML = "Ja gib mir mehr...";
+        if (eatCounter === 10) textBox.innerHTML = "MEEEEHR";
+        if (eatCounter === 20) {
+            textBox.innerHTML = "Ugh... vielleicht reicht das.";
+            startDoorParticles();
+        }
+        if (eatCounter === 30) textBox.innerHTML = "Ey das reicht jetzt wirklich.";
+        if (eatCounter === 50) {
+            stopDoorParticles();
+            triggerGameOver();
+            return;
+        }
+
+        animateCookieEat();
+    }
+});
+
+/* =========================================================
+   ⭐ ANIMATION 5_4 + END-KRÜMEL
+========================================================= */
+function animateCookieEat() {
+
+    const speed = Math.max(0.6 - eatCounter * 0.08, 0.15);
+
+    const oldSlide = document.getElementById("cookieSlide");
+    if (oldSlide) oldSlide.remove();
+
+    const slide = document.createElement("img");
+    slide.id = "cookieSlide";
+    slide.src = "5_4.png";
+
+    slide.style.position = "fixed";
+    slide.style.width = "6vw";
+
+    slide.style.left = "55%";
+    slide.style.top = "66%";
+    slide.style.transform = "translate(-50%, -50%)";
+    slide.style.zIndex = "14";
+    slide.style.opacity = "1";
+    slide.style.transition =
+        `left ${speed}s ease-out, top ${speed}s ease-out, opacity 0.2s ease-out`;
+
+    document.body.appendChild(slide);
+    slide.getBoundingClientRect();
+
+    /* Endpunkt */
+    const endX = 37;
+    const endY = 80;
+
+    setTimeout(() => {
+        slide.style.left = endX + "%";
+        slide.style.top = endY + "%";
+    }, 20);
+
+    setTimeout(() => {
+        slide.style.opacity = "0";
+
+        /* ⭐ Krümel am END-PUNKT */
+        createEndCrumbs(endX, endY, speed);
+
+    }, speed * 1000 + 200);
+
+    createCrumbs(55, 77, speed);
+}
+
+/* ⭐ viele Krümel am Endpunkt */
+function createEndCrumbs(cx, cy, speed) {
+
+    for (let i = 0; i < 20; i++) {
+
+        const c = document.createElement("div");
+        c.classList.add("crumb");
+
+        c.style.left = cx + "%";
+        c.style.top = cy + "%";
+
+        document.body.appendChild(c);
+
+        const dx = (Math.random() * 2 - 1) * 14;
+        const dy = (Math.random() * 2 - 1) * 12;
+
+        setTimeout(() => {
+            c.style.transitionDuration = `${speed}s`;
+            c.style.transform = `translate(${dx}vw, ${dy}vh) scale(0.3)`;
+            c.style.opacity = "0";
+        }, 20);
+
+        setTimeout(() => c.remove(), speed * 1000 + 800);
+    }
+}
+
+function createCrumbs(cx, cy, speed) {
+
+    for (let i = 0; i < 8; i++) {
+
+        const c = document.createElement("div");
+        c.classList.add("crumb");
+
+        c.style.left = cx + "%";
+        c.style.top = cy + "%";
+
+        document.body.appendChild(c);
+
+        const dx = (Math.random() * 2 - 1) * 8;
+        const dy = (Math.random() * 2 - 1) * 6;
+
+        setTimeout(() => {
+            c.style.transitionDuration = `${speed}s`;
+            c.style.transform = `translate(${dx}vw, ${dy}vh) scale(0.4)`;
+            c.style.opacity = "0";
+        }, 20);
+
+        setTimeout(() => c.remove(), speed * 1000 + 600);
+    }
+}
+
+doorZone.onclick = () => {
+
+    stopDoorParticles();
+
+    const slide = document.getElementById("cookieSlide");
+    if (slide) slide.remove();
+
+    /* ⭐ Wenn Nikolaus-Bild noch existiert → erst ausblenden */
+    if (document.getElementById("nikol")) {
+
+        const n = document.getElementById("nikol");
+        const t = document.getElementById("nikolText");
+
+        if (t) t.style.opacity = "0";
+
+        n.style.transition = "all 1s ease-out, filter 1s ease-out, opacity 1s ease-out";
+        n.style.filter = "blur(12px)";
+        n.style.opacity = "0";
+
+        setTimeout(() => {
+            if (n) n.remove();
+            if (t) t.remove();
+
+            /* ⭐ Jetzt Hintergrund wechseln */
+            bg.src = "5_5.png";
+            cookieImg.style.display = "none";
+            textBox.innerHTML = "Fortsetzung folgt...";
+        }, 1000);
+
+        return;
+    }
+
+    /* ⭐ Falls Nikolaus schon weg ist → direkt normales Verhalten */
+    bg.src = "5_5.png";
+    cookieImg.style.display = "none";
+    textBox.innerHTML = "Fortsetzung folgt...";
+};
+
+
+/* GAME OVER */
+function triggerGameOver() {
+
+    document.body.innerHTML = `
+    <div style="
+        position:fixed;
+        inset:0;
+        background:black;
+        color:red;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        align-items:center;
+        font-family:system-ui;
+        ">
+        
+        <div style="font-size:8vw; font-weight:bold;">R.I.P.</div>
+        <div style="font-size:2vw; margin-top:2vh;">
+            Kugelfisch-Chan: 01.12.2024 – 05.12.2024
+        </div>
+
+    </div>
+    `;
+}
+</script>
+
+</body>
+</html>
