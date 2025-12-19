@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Szene 6 – Finale</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: black;
+  font-family: system-ui, sans-serif;
+}
+
+#bg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: contain;
+  z-index: 1;
+}
+
+/* Overlays */
+.overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: contain;
+  opacity: 0.7;
+  z-index: 5;
+  display: none;
+  pointer-events: none;
+}
+
+/* Weihnachtsmann */
+#santa {
+  position: fixed;
+  width: 26vw;
+  left: 37vw;
+  top: -95vh;          /* ⭐ 5% höher */
+  z-index: 4;
+  display: none;
+  transition: top 5s linear;
+  pointer-events: none;
+}
+
+#santa2 {
+  position: fixed;
+  width: 26vw;
+  left: 37vw;
+  top: -95vh;          /* ⭐ 5% höher */
+  z-index: 4;
+  display: none;
+  transition: top 5s linear;
+  pointer-events: none;
+}
+
+/* Geschenke */
+.gift {
+  position: fixed;
+  width: 6vw;
+  z-index: 3;
+  cursor: pointer;
+  transition: all 0.8s ease;
+}
+
+/* Fokus + Text */
+#giftFocus {
+  position: fixed;
+  width: 10vw;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 8;
+  display: none;
+}
+
+#centerText {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: clamp(32px, 3vw, 56px);
+  text-align: center;
+  z-index: 9;
+  display: none;
+  background: rgba(0,0,0,0.6);
+  padding: 20px 30px;
+  border-radius: 12px;
+}
+
+/* Klickzonen */
+.zone { position: fixed; z-index: 20; }
+
+#zoneCenter { left: 40vw; top: 42vh; width: 6vw; height: 20vh; }
+#zoneRight  { left: 59vw; top: 35vh; width: 6vw; height: 9vh; }
+</style>
+</head>
+
+<body>
+
+<img id="bg" src="6_1.png">
+
+<img id="ovFire" class="overlay" src="6_6.png">
+<img id="ovLamp" class="overlay" src="6_5.png">
+<img id="ovDark" class="overlay" src="6_7.png">
+
+<img id="santa" src="6_9.png">
+<img id="santa2" src="6_10.png">
+
+<img id="giftFocus">
+<div id="centerText"></div>
+
+<div id="zoneCenter" class="zone"></div>
+<div id="zoneRight" class="zone"></div>
+
+<script>
+const bg = document.getElementById("bg");
+const ovFire = document.getElementById("ovFire");
+const ovLamp = document.getElementById("ovLamp");
+const ovDark = document.getElementById("ovDark");
+const santa = document.getElementById("santa");
+const santa2 = document.getElementById("santa2");
+const giftFocus = document.getElementById("giftFocus");
+const centerText = document.getElementById("centerText");
+
+let fire = false;
+let lamp = false;
+let giftCount = 0;
+let locked = false;
+let santaActive = false;
+let santaDownTimer = null;
+let santaUpTimer = null;
+
+const gifts = ["6_11.png","6_12.png","6_13.png"];
+const texts = [
+  "Frohe Weihnachten 🎄",
+  "Ich liebe dich ❤️",
+  "Warst du auch artig dieses Jahr?",
+  "Schön, dass es dich gibt",
+  "Herzlichen Glückwunsch – Schulterklopfer gewonnen",
+  "Hier bitte: Luft zum Atmen 💨",
+  "Du bist aber dieses Jahr ganz schön gierig.",
+  "Sicher, dass du noch mehr Geschenke willst?",
+  "Letzte Chance…",
+  "…………………"
+];
+
+function applyState() {
+  if (fire && lamp) {
+    bg.src = "6_8.png";
+    ovDark.style.display = "block";
+    ovFire.style.display = "none";
+    ovLamp.style.display = "none";
+    startSanta("6_9.png");
+    return;
+  }
+
+  stopSantaImmediate();
+  ovDark.style.display = "none";
+
+  if (fire) {
+    bg.src = "6_8.png";
+    ovFire.style.display = "block";
+    ovLamp.style.display = "none";
+    return;
+  }
+
+  if (lamp) {
+    bg.src = "6_1.png";
+    ovLamp.style.display = "block";
+    ovFire.style.display = "none";
+    return;
+  }
+
+  bg.src = "6_1.png";
+  ovFire.style.display = "none";
+  ovLamp.style.display = "none";
+}
+
+zoneCenter.onclick = () => { if (!locked) { fire = !fire; applyState(); } };
+zoneRight.onclick  = () => { if (!locked) { lamp = !lamp; applyState(); } };
+
+function resetSanta() {
+  clearTimeout(santaDownTimer);
+  clearTimeout(santaUpTimer);
+
+  santa.style.transition = "none";
+  santa.style.display = "none";
+  santa.style.top = "-95vh";
+  santa.style.opacity = "1";
+
+  santaActive = false;
+
+  // Reflow erzwingen
+  santa.getBoundingClientRect();
+
+  // Transition wieder aktivieren
+  santa.style.transition = "top 5s linear";
+}
+
+
+function startSanta(img) {
+  if (locked || santaActive) return;
+  santaActive = true;
+  santa.src = img;
+
+  santa.style.display = "block";
+  santa.style.top = "-95vh";
+  santa.getBoundingClientRect();
+  santa.style.top = "0vh";     /* 5% höherer Endpunkt */
+
+  santaDownTimer = setTimeout(() => {
+    if (img === "6_9.png") spawnGift();
+    santa.style.top = "-95vh";
+    santaUpTimer = setTimeout(() => {
+      santa.style.display = "none";
+      santaActive = false;
+    }, 5000);
+  }, 5000);
+}
+
+function startSanta2(img) {
+  if (locked || santaActive) return;
+  santaActive = true;
+  santa2.src = img;
+
+  santa2.style.display = "block";
+  santa2.style.top = "-95vh";
+  santa2.getBoundingClientRect();
+  santa2.style.top = "0vh";     /* 5% höherer Endpunkt */
+
+  santaDownTimer = setTimeout(() => {
+    if (img === "6_9.png") spawnGift();
+    santa2.style.top = "-95vh";
+    santaUpTimer = setTimeout(() => {
+      santa.style.display = "none";
+      santaActive = false;
+    }, 5000);
+  }, 5000);
+}
+
+function stopSantaImmediate() {
+  clearTimeout(santaDownTimer);
+  clearTimeout(santaUpTimer);
+  santa.style.display = "none";
+  santaActive = false;
+}
+
+function spawnGift() {
+  if (giftCount >= 10) return;
+
+  const g = document.createElement("img");
+  g.src = gifts[Math.floor(Math.random() * gifts.length)];
+  g.className = "gift";
+
+  /* mehr mittig, nur horizontal */
+  g.style.left = (Math.random() * 30 + 35) + "vw";
+  g.style.top  = (Math.random() * 60 + 20) + "vh";
+
+  document.body.appendChild(g);
+
+  g.onclick = () => {
+    g.remove();
+    openGift(g.src);
+  };
+}
+
+function openGift(src) {
+  giftFocus.src = src;
+  giftFocus.style.display = "block";
+  centerText.innerHTML = texts[giftCount];
+  centerText.style.display = "block";
+
+  setTimeout(() => {
+    giftFocus.style.display = "none";
+    centerText.style.display = "none";
+  }, 5000);
+
+  giftCount++;
+
+  if (giftCount === 10) finale();
+}
+
+function flickerLamp(durationMs = 3000, flickerCount = 10) {
+  let elapsed = 0;
+
+  function flick() {
+    if (elapsed >= durationMs) {
+      ovLamp.style.display = "none"; // sauber aus am Ende
+      return;
+    }
+
+    // zufällig an / aus
+    ovLamp.style.display = Math.random() > 0.5 ? "block" : "none";
+
+    // nächster Flicker-Zeitpunkt (unregelmäßig)
+    const next = Math.random() * 250 + 80; // 80–330 ms
+    elapsed += next;
+
+    setTimeout(flick, next);
+  }
+
+  flick();
+}
+
+function finale() {
+  locked = false;
+
+  resetSanta();
+
+  // ⭐ Santa2 starten
+  startSanta2("6_10.png");
+
+  // ⭐ LAMPEN-FLACKERN während Santa2 runterkommt
+  flickerLamp(3000, 10);
+
+  setTimeout(() => {
+    ovDark.style.display = "none";
+    ovFire.style.display = "none";
+    ovLamp.style.display = "none";
+
+    setTimeout(() => {
+      document.body.innerHTML = `
+      <div style="position:fixed;inset:0;background:black;color:red;
+      display:flex;flex-direction:column;justify-content:center;align-items:center;">
+        <div style="font-size:8vw;font-weight:bold;">R.I.P</div>
+        <div style="font-size:2vw;margin-top:2vh;">
+          Da war wohl jemand etwas zu gierig :)
+        </div>
+      </div>`;
+    }, 1000);
+
+  }, 4000);
+}
+
+
+applyState();
+</script>
+
+</body>
+</html>
